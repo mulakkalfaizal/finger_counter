@@ -14,14 +14,11 @@ cTime = 0
 folder_path = "finger_images"
 rawList = os.listdir(folder_path)
 myList = sorted(rawList, key=lambda x: x[:1])
-print(myList)
 
 overlayList = []
 for imPath in myList:
     image = cv2.imread(f"{folder_path}/{imPath}")
     overlayList.append(image)
-
-# print(len(overlayList))
 
 detector = htm.handDetector(detectionCon=0.75)
 tipIds = [4, 8, 12, 16, 20]
@@ -29,6 +26,8 @@ tipIds = [4, 8, 12, 16, 20]
 while True:
     success, img = cap.read()
     img = detector.findHands(img)
+
+    # This will give the full landmark of the fingers and the position
     lmList = detector.findPosition(img, draw=False)
     #print(lmList)
 
@@ -38,6 +37,8 @@ while True:
         Logic for thumb finger
         for thump the tip will not go below the second point so we have depend on hte x axis,
         ie if the tip of the thump is moved to right compared to below tip (-1) then it is considered as folded
+        lmList[tipIds[0]][1] is the x position of tip of thump
+        lmList[tipIds[0] - 1][1] is the x postion of the below point of the thump
         '''
         if lmList[tipIds[0]][1] > lmList[tipIds[0] - 1][1]:
             fingers.append(1)
@@ -59,8 +60,14 @@ while True:
         totalFingers = fingers.count(1)
         print(f"Total finger open is {totalFingers}")
 
+        # display the corresponding image based on the number of fingers open.
         h, w, c = overlayList[totalFingers - 1].shape
         img[0:h, 0:w] = overlayList[totalFingers - 1]
+
+        # display the text also mentioning how many fingers are  open
+        cv2.rectangle(img, (20, 525), (170, 700), (0, 255, 0), cv2.FILLED)
+        cv2.putText(img, str(totalFingers), (40, 660), cv2.FONT_HERSHEY_PLAIN, 10, (255, 0, 0), 25)
+
 
     cTime = time.time()
     fps = 1 / (cTime - pTime)
