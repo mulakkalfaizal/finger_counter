@@ -12,7 +12,8 @@ pTime = 0
 cTime = 0
 
 folder_path = "finger_images"
-myList = os.listdir(folder_path)
+rawList = os.listdir(folder_path)
+myList = sorted(rawList, key=lambda x: x[:1])
 print(myList)
 
 overlayList = []
@@ -20,7 +21,7 @@ for imPath in myList:
     image = cv2.imread(f"{folder_path}/{imPath}")
     overlayList.append(image)
 
-print(len(overlayList))
+# print(len(overlayList))
 
 detector = htm.handDetector(detectionCon=0.75)
 tipIds = [4, 8, 12, 16, 20]
@@ -32,15 +33,6 @@ while True:
     #print(lmList)
 
     if len(lmList) != 0:
-        '''
-        Lower value of y means open
-        8 is the tip of index finger
-        
-        if lmList[8][2] < lmList[6][2]:
-            print("Index Finger Open")
-        else:
-            print("index finger closed")
-        '''
         fingers = []
         '''
         Logic for thumb finger
@@ -53,8 +45,8 @@ while True:
             fingers.append(0)
         '''
         Logic for other Four fingers
-        if the tip of the four fingers are below the second tip (-2 as per the landmark diagram) then it is 
-        considered as folded. 
+        if the tip of the four fingers are below the second tip (tip -2 as per the landmark diagram) then it is
+        considered as folded.
         '''
         for id in range(1, 5):
             # Checking tip point (y) is less than tip -2 point (y) then it is open
@@ -62,10 +54,13 @@ while True:
                 fingers.append(1)
             else:
                 fingers.append(0)
-        print(fingers)
 
-    h, w, c = overlayList[0].shape
-    img[0:h, 0:w] = overlayList[0]
+        # Count the number of 1's in the list which gives us how many fingers are open
+        totalFingers = fingers.count(1)
+        print(f"Total finger open is {totalFingers}")
+
+        h, w, c = overlayList[totalFingers - 1].shape
+        img[0:h, 0:w] = overlayList[totalFingers - 1]
 
     cTime = time.time()
     fps = 1 / (cTime - pTime)
